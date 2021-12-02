@@ -1,23 +1,42 @@
-const mongoose = require('mongoose');
-
-// Import of the model Recipe from './models/Recipe.model.js'
-const Recipe = require('./models/Recipe.model');
-// Import of the data from './data.json'
 const data = require('./data');
+const mongoose = require('mongoose');
+const Recipe = require('./models/Recipe.model');
+const MONGODB_URI = 'mongodb://localhost:27000/recipe';
 
-const MONGODB_URI = 'mongodb://localhost:27017/recipe-app';
-
-// Connection to the database "recipe-app"
-mongoose
-  .connect(MONGODB_URI)
-  .then(x => {
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(async (x) => {
     console.log(`Connected to the database: "${x.connection.name}"`);
-    // Before adding any recipes to the database, let's remove all existing ones
-    return Recipe.deleteMany()
-  })
-  .then(() => {
-    // Run your code here, after you have insured that the connection was made
-  })
-  .catch(error => {
-    console.error('Error connecting to the database', error);
+    await Recipe.deleteMany()
+    try {
+
+        const createdRecipe = await Recipe.create({
+        title: "recipe eko",
+        ingredients: "leite, galinha, vinho, agua",
+        dishType: "breakfast",
+        duration: 66,
+        })
+
+      console.log("recipe: ", createdRecipe)
+      await Recipe.insertMany(data)     
+      const varRecipe = await Recipe.findOneAndUpdate(
+        {title: "eko recipes"},
+        {$set: {duration: 1}},
+        {new: true}
+      )
+
+       console.log("recipe: ", varRecipe)
+       const deleteRecipe = await Recipe.deleteOne({
+        title: "Carrot Cake",
+      })
+
+      console.log(deleteRecipe, " delete recipes")
+      mongoose.connection.close()
+
+    } catch (err) {console.log(err)}
+
+  }).catch(error => {
+    console.error('Error', error);
   });
